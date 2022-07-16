@@ -1,8 +1,16 @@
-import React ,{useState} from 'react';
+import React ,{useRef,useEffect,useState} from 'react';
 import Todo from "./components/Todo";
 import Form from "./components/Form"
 import FilterButton from "./components/FilterButton"
 import { nanoid } from "nanoid";
+function usePrevious(value) {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+}
+
 
 const FILTER_MAP = {
   All: () => true,
@@ -18,8 +26,10 @@ function App(props) {
 
   const [tasks,setTasks]=useState(props.tasks);
   const [filter, setFilter] = useState('All');
+  const listHeadingRef = useRef(null);
+
   const FILTER_NAMES = Object.keys(FILTER_MAP);
-const filterList = FILTER_NAMES.map(name => (
+  const filterList = FILTER_NAMES.map(name => (
   <FilterButton
     key={name}
     name={name}
@@ -84,6 +94,14 @@ const taskList = tasks.filter(FILTER_MAP[filter]).map(task => (
 
 const taskNoun= taskList.length!=1?"tasks":"task";
 const headingText = `${taskList.length} ${taskNoun} remaining`;
+const prevTaskLength = usePrevious(tasks.length);
+useEffect(() => {
+  if (tasks.length - prevTaskLength === -1) {
+    listHeadingRef.current.focus();
+  }
+}, [tasks.length, prevTaskLength]);
+
+
 
 
   
@@ -95,7 +113,7 @@ const headingText = `${taskList.length} ${taskNoun} remaining`;
       <div className="filters btn-group stack-exception">
       {filterList}
       </div>
-      <h2 id="list-heading">
+      <h2 id="list-heading" tabIndex="-1" ref={listHeadingRef}>
         {headingText}
       </h2>
       <ul
